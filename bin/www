@@ -4,22 +4,102 @@
  * Module dependencies.
  */
 
-var app = require('../app');
-var debug = require('debug')('tripbyselfserver:server');
-var http = require('http');
+let debug = require('debug')('tripbyselfserver:server');
+let http = require('http');
+let utils = require("../utils");
+let createError = require('http-errors');
+let express = require('express');
+let path = require('path');
+let cookieParser = require('cookie-parser');
+let logger = require('morgan');
+let mysql = require("promise-mysql");
 
-/**
- * Get port from environment and store in Express.
- */
+global.module = {}
 
-var port = normalizePort(process.env.PORT || '4000');
+let cors = require("cors")
+
+let app = express();
+
+// view engine setup
+app.set('views', path.resolve("tripByselfServer/views"));
+app.set('view engine', 'jade');
+
+app.use(cors())
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+// setmodule
+(async () => {
+  let file = await utils.readFile("./tripByselfServer/Api");
+  for (let service of file) {
+    let curModule = require(service);
+    let moduleName = service.slice(service.lastIndexOf("\\") + 1, service.lastIndexOf("\.js"))
+    global.module[moduleName] = curModule
+  }
+
+  let pool = await mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: 'Yt135212',
+    database: 'trip'
+  })
+  global.pool = pool
+})()
+
+
+
+app.use("*", async function (req, res) {
+  console.log(req);
+  let {service, target, method, param} = utils.parseHttpRequest(req);
+  if (!service) res.status(500).end();
+  try {
+    let resData = await service(global.pool, param, req, res);
+    console.log(resData);
+    res.status(200).json(resData).end()
+  } catch (e) {
+    res.status(500).json(e).end()
+  }
+})
+
+// catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  next(createError(404));
+});
+
+// error handler
+app.use(function (err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
+
+
+
+
+
+
+
+
+
+
+
+let port = normalizePort(process.env.PORT || '4000');
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+let server = http.createServer(app);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -34,7 +114,7 @@ server.on('listening', onListening);
  */
 
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+  let port = parseInt(val, 10);
 
   if (isNaN(port)) {
     // named pipe
@@ -58,7 +138,7 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof port === 'string'
+  let bind = typeof port === 'string'
     ? 'Pipe ' + port
     : 'Port ' + port;
 
@@ -82,8 +162,8 @@ function onError(error) {
  */
 
 function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
+  let addr = server.address();
+  let bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
