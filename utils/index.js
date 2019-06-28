@@ -3,7 +3,7 @@ const path = require("path")
 const url = require("url")
 const readFile = (dirPath, list = []) => {
     return new Promise((resolve, reject) => {
-        fs.readdir(dirPath, async (err, file) => {
+        fs.readdir(path.resolve(dirPath), async (err, file) => {
             if (err) reject(err);
             for (let i = 0; i < file.length; i++) {
                 let curFile = file[i];

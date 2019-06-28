@@ -7,5 +7,9 @@ module.exports = {
   async saveTrip(pool, param){
     let res = await saveInDB(pool, param, 'trip_data');
     return res;
+  },
+  async getTotalTrips(pool){
+    let data = await pool.query(`select * from trip_data`);
+    return data
   }
 }
