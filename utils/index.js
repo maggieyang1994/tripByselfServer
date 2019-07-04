@@ -23,7 +23,8 @@ const readFile = (dirPath, list = []) => {
 }
 
 const parseHttpRequest = (req) => {
-    var parsedUrl = url.parse(req.baseUrl)
+    var parsedUrl = url.parse(req.baseUrl);
+    console.log(req, req.baseUrl)
     var sPath = parsedUrl.pathname.replace('#', '')
     var sPathMatch = sPath.match('([^/]+)(?=/[^/]+/?$)')
     var target = null

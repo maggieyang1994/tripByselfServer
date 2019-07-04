@@ -38,10 +38,12 @@ app.use(express.static(path.join(__dirname, 'public')));
   let file = await utils.readFile("./Api");
   for (let service of file) {
     let curModule = require(service);
-    let moduleName = service.slice(service.lastIndexOf("\\") + 1, service.lastIndexOf("\.js"))
-    global.module[moduleName] = curModule
+    let moduleName = service.slice(service.lastIndexOf("\/") + 1, service.lastIndexOf("\.js"));
+    console.log('moudleName', moduleName)
+    global.module[moduleName] = curModule;
+    
   }
-
+  console.log('global', global.module)
   let pool = await mysql.createPool({
     host: '193.112.111.124',
     user: "dev",
