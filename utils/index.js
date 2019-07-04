@@ -50,20 +50,26 @@ const parseHttpRequest = (req) => {
     }
 }
 const getInsertSqlStr = async(pool, param, dbName) => {
-    let res = await pool.query(`select column_name from information_schema.columns where table_name='${dbName}'`);
+   try{
+    let res = await pool.query(`select column_name as columnName from information_schema.columns where table_name='${dbName}'`);
     console.log(res);
-    let column_name = res.map(x => x.column_name)
+    let column_name = res.map(x => x.columnName)
     let str = ''
     for(let columnName of column_name){
         str += `${columnName} = ${param[columnName] ? `'${param[columnName]}'`: null},`
     };
     return `insert into ${dbName} set ${str.substring(0, str.length - 1)}`
+   }catch(e){
+    throw error(JSON.stringify(e))
+   }
+   
 }
 const saveInDB = async (pool, param, dbName) => {   
     !Array.isArray(param) && (param = [param]);
     for(let data of param){
-        let sql = await getInsertSqlStr(pool, data, dbName);
+       
         try{
+            let sql = await getInsertSqlStr(pool, data, dbName);
             await pool.query(sql);
         }catch(e){
             return {
