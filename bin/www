@@ -13,6 +13,7 @@ let path = require('path');
 let cookieParser = require('cookie-parser');
 let logger = require('morgan');
 let mysql = require("promise-mysql");
+let fs = require("fs");
 
 global.module = {}
 
@@ -38,10 +39,10 @@ app.use(express.static(path.join(__dirname, 'public')));
   let file = await utils.readFile("./Api");
   for (let service of file) {
     let curModule = require(service);
-    let moduleName = service.slice(service.lastIndexOf(process.platform === 'linux'? '/': '\\') + 1, service.lastIndexOf("\.js"));
+    let moduleName = service.slice(service.lastIndexOf(process.platform === 'linux' ? '/' : '\\') + 1, service.lastIndexOf("\.js"));
     console.log('moudleName', moduleName)
     global.module[moduleName] = curModule;
-    
+
   }
   console.log('global', global.module)
   let pool = await mysql.createPool({
@@ -57,7 +58,26 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use("*", async function (req, res) {
   console.log(req);
-  let {service, target, method, param} = utils.parseHttpRequest(req);
+  if (req.baseUrl === '/getImage') {
+    try {
+      let updateTime = fs.statSync('tripByselfServer/public/javascripts/demo.js');
+      let lastTime = req.headers['If-Modified-Since']
+      if (lastTime && moment(updateTime).isSame(moment(lastTime))) {
+        // 命中协商缓存
+        res.status(304).end()
+      } else {
+        let file = fs.readFileSync("tripByselfServer/public/javascripts/demo.js", 'utf-8');
+        // 设置缓存有效期  从请求正确返回时间开始算
+        res.setHeader('Cache-Control', 'max-age=30000000000000000000000');
+        res.setHeader('Last-Modified', new Date(updateTime.mtime).toGMTString())
+        res.end(file)
+        return;
+      }
+    } catch (e) {
+      res.status(500).json(e).end()
+    }
+  }
+  let { service, target, method, param } = utils.parseHttpRequest(req);
   if (!service) res.status(500).end();
   try {
     let resData = await service(global.pool, param, req, res);
