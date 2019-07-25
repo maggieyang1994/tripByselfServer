@@ -4,13 +4,13 @@ const url = require("url")
 const readFile = (dirPath, list = []) => {
     return new Promise((resolve, reject) => {
         let temp = path.resolve(dirPath);
-        let curPath = path.resolve('tripByselfServer', dirPath)
-        fs.readdir(curPath, async (err, file) => {
+        // let curPath = path.resolve('tripByselfServer', dirPath)
+        fs.readdir(dirPath, async (err, file) => {
             if (err) reject(err);
             for (let i = 0; i < file.length; i++) {
                 let curFile = file[i];
-                // let tempFile = path.resolve(dirPath, curFile)
-                let tempFile = path.resolve('tripByselfServer', dirPath, curFile)
+                let tempFile = path.resolve(dirPath, curFile)
+                // let tempFile = path.resolve('tripByselfServer', dirPath, curFile)
                 if (fs.statSync(tempFile).isDirectory()) {
                     await readFile(tempFile, list)
                 } else {
