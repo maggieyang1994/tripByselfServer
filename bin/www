@@ -14,6 +14,7 @@ let cookieParser = require('cookie-parser');
 let logger = require('morgan');
 let mysql = require("promise-mysql");
 let fs = require("fs");
+let md5 = require("md5")
 
 global.module = {}
 
@@ -25,7 +26,9 @@ let app = express();
 app.set('views', path.resolve("tripByselfServer/views"));
 app.set('view engine', 'jade');
 
-app.use(cors())
+app.use(cors({
+  origin: 'http://localhost:8081'
+}))
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -60,21 +63,40 @@ app.use("*", async function (req, res) {
   console.log(req);
   if (req.baseUrl === '/getImage') {
     try {
-      let updateTime = fs.statSync('tripByselfServer/public/javascripts/demo.js');
-      let lastTime = req.headers['If-Modified-Since']
-      if (lastTime && moment(updateTime).isSame(moment(lastTime))) {
-        // 命中协商缓存
-        res.status(304).end()
+      let stat = fs.statSync('tripByselfServer/public/javascripts/demo.js');
+      let lastTime = req.headers['if-modified-since'];
+      updateTime = new Date(stat.mtime).toGMTString();
+      // 第一次请求的时候 响应头带上last-modified  如果强缓存没有命中
+      // 第二次请求的时候 请求头会带上if-modified-since(其实就是上一次请求last-modified 的值)
+      // 这个时候将if-modified-since与文件修改时间做对比  如果相同则返回304 否则重新返回资源并重新设置过期时间和last-modified
+
+      // last-modified 和 if-modified-since 问题
+      // 1 文件修改时间 不能精确到秒  如果文件修改时间很快 无法检测到更新
+      // 2 面对一些重复性改变 比如ctrl-x ctrl-v 文件内容其实并没有发生改变 但是修改时间会变
+      // 所以出现了etag  但是etag又有性能问题  因为服务器需要读取文件内容 才能知道文件内容是否真的有变化（etag he if-none-match）
+      if (lastTime && updateTime === lastTime) {
+     
+        //   如果缓存失效（没有命中强缓存）   则会命中协商缓存  由服务器判断是否需要重新返回资源
+        // res.writeHead(304, 'Not Modified');
+        // res.end();
+        // res.statusCode = 304;   
+        // res.end();
+        // res.status(304).end();
+        // res.sendStatus(304);
+        res.status(304).json('rinima').end()
+        return;
       } else {
         let file = fs.readFileSync("tripByselfServer/public/javascripts/demo.js", 'utf-8');
-        // 设置缓存有效期  从请求正确返回时间开始算
-        res.setHeader('Cache-Control', 'max-age=30000000000000000000000');
-        res.setHeader('Last-Modified', new Date(updateTime.mtime).toGMTString())
+        // 设置缓存有效期  从请求正确返回时间开始算  对于强缓存 只需要后端设置max-age响应头  由浏览器判断如果命中了强缓存 则直接返回缓存  不请求服务器
+        // 注意f12  调试的时候取消 disable cache
+        res.setHeader('Cache-Control', 'max-age=0');
+        res.setHeader('Last-Modified', updateTime);
+        // res.setHeader("Etag", ETag)
         res.end(file)
         return;
       }
     } catch (e) {
-      res.status(500).json(e).end()
+      res.status(500).json(e).end() 
     }
   }
   let { service, target, method, param } = utils.parseHttpRequest(req);
