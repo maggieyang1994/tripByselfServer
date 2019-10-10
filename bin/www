@@ -26,9 +26,13 @@ let app = express();
 app.set('views', path.resolve("tripByselfServer/views"));
 app.set('view engine', 'jade');
 
-app.use(cors({
-  origin: 'http://localhost:8081'
-}))
+
+// 当credentials = true的时候  origin不能是*
+// let corsOption = {
+//   origin: 'http://localhost:8081',
+//   credentials: true
+// }
+app.use(cors())
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -49,9 +53,9 @@ app.use(express.static(path.join(__dirname, 'public')));
   }
   console.log('global', global.module)
   let pool = await mysql.createPool({
-    host: '193.112.111.124',
-    user: "dev",
-    password: "pwd",
+    host: '150.109.45.170',
+    user: 'root',
+    password: 'rootroot',
     database: 'trip'
   })
   global.pool = pool
@@ -83,12 +87,14 @@ app.use("*", async function (req, res) {
         // res.end();
         // res.status(304).end();
         // res.sendStatus(304);
-        res.status(304).json('rinima').end()
+        res.writeHead(304,"Not Modified")
+        res.end()
         return;
       } else {
         let file = fs.readFileSync("tripByselfServer/public/javascripts/demo.js", 'utf-8');
         // 设置缓存有效期  从请求正确返回时间开始算  对于强缓存 只需要后端设置max-age响应头  由浏览器判断如果命中了强缓存 则直接返回缓存  不请求服务器
         // 注意f12  调试的时候取消 disable cache
+        res.setHeader('Set-Cookie', 'username=maggie;Max-age=10;HttpOnly')
         res.setHeader('Cache-Control', 'max-age=0');
         res.setHeader('Last-Modified', updateTime);
         // res.setHeader("Etag", ETag)
