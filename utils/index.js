@@ -4,13 +4,13 @@ const url = require("url")
 const readFile = (dirPath, list = []) => {
     return new Promise((resolve, reject) => {
         let temp = path.resolve(dirPath);
-        // let curPath = path.resolve('tripByselfServer', dirPath)
-        fs.readdir(dirPath, async (err, file) => {
+        let curPath = path.resolve('tripByselfServer', dirPath)
+        fs.readdir(curPath, async (err, file) => {
             if (err) reject(err);
             for (let i = 0; i < file.length; i++) {
                 let curFile = file[i];
-                let tempFile = path.resolve(dirPath, curFile)
-                // let tempFile = path.resolve('tripByselfServer', dirPath, curFile)
+                // let tempFile = path.resolve(dirPath, curFile)
+                let tempFile = path.resolve('tripByselfServer', dirPath, curFile)
                 if (fs.statSync(tempFile).isDirectory()) {
                     await readFile(tempFile, list)
                 } else {
@@ -39,7 +39,7 @@ const parseHttpRequest = (req) => {
     else {
         // console.log('Fail to parse http request, url:', req.url)
     }
-    var param ={...req.body, ...req.query}
+    var param = { ...req.body, ...req.query }
     if (!param.data) param.data = {}
     return {
         parsedUrl,
@@ -50,29 +50,29 @@ const parseHttpRequest = (req) => {
         param
     }
 }
-const getInsertSqlStr = async(pool, param, dbName) => {
-   try{
-    let res = await pool.query(`select column_name as columnName from information_schema.columns where table_name='${dbName}'`);
-    // console.log(res);
-    let column_name = res.map(x => x.columnName)
-    let str = ''
-    for(let columnName of column_name){
-        str += `${columnName} = ${param[columnName] ? `'${param[columnName]}'`: null},`
-    };
-    return `insert into ${dbName} set ${str.substring(0, str.length - 1)}`
-   }catch(e){
-    throw error(JSON.stringify(e))
-   }
-   
+const getInsertSqlStr = async (pool, param, dbName) => {
+    try {
+        let res = await pool.query(`select column_name as columnName from information_schema.columns where table_name='${dbName}'`);
+        // console.log(res);
+        let column_name = res.map(x => x.columnName)
+        let str = ''
+        for (let columnName of column_name) {
+            str += `${columnName} = ${param[columnName] ? `'${param[columnName]}'` : null},`
+        };
+        return `insert into ${dbName} set ${str.substring(0, str.length - 1)}`
+    } catch (e) {
+        throw error(JSON.stringify(e))
+    }
+
 }
-const saveInDB = async (pool, param, dbName) => {   
+const saveInDB = async (pool, param, dbName) => {
     !Array.isArray(param) && (param = [param]);
-    for(let data of param){
-       
-        try{
+    for (let data of param) {
+
+        try {
             let sql = await getInsertSqlStr(pool, data, dbName);
             await pool.query(sql);
-        }catch(e){
+        } catch (e) {
             return {
                 code: 0,
                 error: JSON.stringify(e),
@@ -86,8 +86,19 @@ const saveInDB = async (pool, param, dbName) => {
     }
 }
 
+const generateRandomString = (length) => {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (var i = 0; i < length; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
 module.exports = {
     readFile,
     parseHttpRequest,
-    saveInDB
+    saveInDB,
+    generateRandomString
 }
