@@ -28,7 +28,7 @@ app.set('view engine', 'jade');
 
 
 // 当credentials = true的时候  origin不能是*
-let allowedOrigins = ['http://localhost:8081', 'https://triprecord-server.herokuapp.com', 'https://maggieyang1994.github.io']
+let allowedOrigins = ['http://localhost:8081', 'https://triprecord-server.herokuapp.com', 'https://maggieyang1994.github.io','http://localhost:8080']
 let corsOption = {
   origin: function (origin, callback) {
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -60,9 +60,13 @@ app.use(express.static(path.join(__dirname, 'public')));
   }
   console.log('global', global.module)
   let pool = await mysql.createPool({
-    host: '150.109.45.170',
+    // host: 'fedev.me',
+    // user: 'root',
+    // password: 'rootroot',
+    // database: 'trip'
+    host: '127.0.0.1',
     user: 'root',
-    password: 'rootroot',
+    password: 'Yt135212',
     database: 'trip'
   })
   global.pool = pool
@@ -72,50 +76,53 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use("*", async function (req, res) {
   if (req.baseUrl === '/getImage') {
-    try {
-      let stat = fs.statSync('tripByselfServer/public/javascripts/demo.js');
-      let lastTime = req.headers['if-modified-since'];
-      updateTime = new Date(stat.mtime).toGMTString();
-      // 第一次请求的时候 响应头带上last-modified  如果强缓存没有命中
-      // 第二次请求的时候 请求头会带上if-modified-since(其实就是上一次请求last-modified 的值)
-      // 这个时候将if-modified-since与文件修改时间做对比  如果相同则返回304 否则重新返回资源并重新设置过期时间和last-modified
+    res.setHeader("Location", 'https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Location');
+    // 301永久重定向   302暂时重定向
+    res.status(301).end();
+    // try {
+    //   let stat = fs.statSync('tripByselfServer/public/javascripts/demo.js');
+    //   let lastTime = req.headers['if-modified-since'];
+    //   updateTime = new Date(stat.mtime).toGMTString();
+    //   // 第一次请求的时候 响应头带上last-modified  如果强缓存没有命中
+    //   // 第二次请求的时候 请求头会带上if-modified-since(其实就是上一次请求last-modified 的值)
+    //   // 这个时候将if-modified-since与文件修改时间做对比  如果相同则返回304 否则重新返回资源并重新设置过期时间和last-modified
 
-      // last-modified 和 if-modified-since 问题
-      // 1 文件修改时间 不能精确到秒  如果文件修改时间很快 无法检测到更新
-      // 2 面对一些重复性改变 比如ctrl-x ctrl-v 文件内容其实并没有发生改变 但是修改时间会变
-      // 所以出现了etag  但是etag又有性能问题  因为服务器需要读取文件内容 才能知道文件内容是否真的有变化（etag he if-none-match）
-      if (lastTime && updateTime === lastTime) {
+    //   // last-modified 和 if-modified-since 问题
+    //   // 1 文件修改时间 不能精确到秒  如果文件修改时间很快 无法检测到更新
+    //   // 2 面对一些重复性改变 比如ctrl-x ctrl-v 文件内容其实并没有发生改变 但是修改时间会变
+    //   // 所以出现了etag  但是etag又有性能问题  因为服务器需要读取文件内容 才能知道文件内容是否真的有变化（etag he if-none-match）
+    //   if (lastTime && updateTime === lastTime) {
 
-        //   如果缓存失效（没有命中强缓存）   则会命中协商缓存  由服务器判断是否需要重新返回资源
-        // res.writeHead(304, 'Not Modified');
-        // res.end();
-        // res.statusCode = 304;   
-        // res.end();
-        // res.status(304).end();
-        // res.sendStatus(304);
-        res.writeHead(304, "Not Modified")
-        res.end()
-        return;
-      } else {
-        let file = fs.readFileSync("tripByselfServer/public/javascripts/demo.js", 'utf-8');
-        // 设置缓存有效期  从请求正确返回时间开始算  对于强缓存 只需要后端设置max-age响应头  由浏览器判断如果命中了强缓存 则直接返回缓存  不请求服务器
-        // 注意f12  调试的时候取消 disable cache
-        res.setHeader('Set-Cookie', 'username=maggie;Max-age=100000;HttpOnly')
-        // res.setHeader('Cache-Control', 'max-age=0');
-        res.setHeader('Last-Modified', updateTime);
-        // res.setHeader("Etag", ETag)
-        res.end(file)
-        return;
-      }
-    } catch (e) {
-      res.status(500).json(e).end()
-    }
+    //     //   如果缓存失效（没有命中强缓存）   则会命中协商缓存  由服务器判断是否需要重新返回资源
+    //     // res.writeHead(304, 'Not Modified');
+    //     // res.end();
+    //     // res.statusCode = 304;   
+    //     // res.end();
+    //     // res.status(304).end();
+    //     // res.sendStatus(304);
+    //     res.writeHead(304, "Not Modified")
+    //     res.end()
+    //     return;
+    //   } else {
+    //     let file = fs.readFileSync("tripByselfServer/public/javascripts/demo.js", 'utf-8');
+    //     // 设置缓存有效期  从请求正确返回时间开始算  对于强缓存 只需要后端设置max-age响应头  由浏览器判断如果命中了强缓存 则直接返回缓存  不请求服务器
+    //     // 注意f12  调试的时候取消 disable cache
+    //     // res.setHeader('Set-Cookie', 'username=maggie;Max-age=100000;HttpOnly')
+    //     // res.setHeader('Cache-Control', 'max-age=0');
+    //     res.setHeader('Last-Modified', updateTime);
+    //     // res.setHeader("Etag", ETag)
+    //     res.end(file)
+    //     return;
+    //   }
+    // } catch (e) {
+    //   res.status(500).json(e).end()
+    // }
   }
   let { service, target, method, param } = utils.parseHttpRequest(req);
   if (!service) res.status(500).end();
   try {
     let sessionId = req.cookies.sessionId
-    let login_id = req.headers['login_id']
+    let login_id = decodeURI(req.headers['login_id'])
     // 请求前 验证sessionId
     if(req.baseUrl === '/user/getUserDetail'){
       // if(sessionId){
@@ -129,7 +136,7 @@ app.use("*", async function (req, res) {
     if(!sessionId){
       res.status(401).end()
     } else {
-      let token = await pool.query(`select * from trip_user_token where login_id = '${login_id}' and token_text='${sessionId}' and token_is_active = 1`);
+      let token = await pool.query(`select * from trip_user_token where login_id = '${login_id}' and token_text='${sessionId}' and token_is_active = 1 and token_exp_dt >= ${Date.now()}`);
       if(!token.length) res.status(401).json(e).end();
       let resData = await service(global.pool, param, req, res);
       res.status(200).json(resData).end()

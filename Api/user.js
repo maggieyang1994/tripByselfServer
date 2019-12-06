@@ -73,10 +73,10 @@ module.exports = {
       data: { url: "https://www.rrfed.com" }
     };
     data.forEach(x => {
-      webPush.sendNotification({
-        endpoint: x.endpoint,
-        payload
-      })
+      webPush.sendNotification(
+        JSON.parse(x.subscription),
+        JSON.stringify(payload)
+      )
     });
     return {
       code: 200,
