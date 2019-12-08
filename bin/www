@@ -60,14 +60,14 @@ app.use(express.static(path.join(__dirname, 'public')));
   }
   console.log('global', global.module)
   let pool = await mysql.createPool({
-    // host: 'fedev.me',
-    // user: 'root',
-    // password: 'rootroot',
-    // database: 'trip'
-    host: '127.0.0.1',
+    host: 'fedev.me',
     user: 'root',
-    password: 'Yt135212',
+    password: 'rootroot',
     database: 'trip'
+    // host: '127.0.0.1',
+    // user: 'root',
+    // password: 'Yt135212',
+    // database: 'trip'
   })
   global.pool = pool
 })()
