@@ -28,7 +28,7 @@ app.set('view engine', 'jade');
 
 
 // 当credentials = true的时候  origin不能是*
-let allowedOrigins = ['https://192.168.0.50:8080', 'https://triprecord-server.herokuapp.com', 'https://maggieyang1994.github.io','http://localhost:8080']
+let allowedOrigins = ['https://192.168.0.50:8080','https://192.168.100.107:8080', 'https://triprecord-server.herokuapp.com', 'https://maggieyang1994.github.io','http://localhost:8080']
 let corsOption = {
   origin: function (origin, callback) {
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -129,6 +129,7 @@ app.use("*", async function (req, res) {
       //   // 已经登陆过 
       //   res.status(204).end()
       // }
+      console.log("getUserDetail")
       let resData = await service(global.pool, param, req, res);
       res.status(200).json(resData).end()
     }
@@ -186,6 +187,7 @@ let server = http.createServer(app);
  */
 
 server.listen(port);
+console.log("listen in port " + port)
 server.on('error', onError);
 server.on('listening', onListening);
 

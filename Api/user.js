@@ -5,6 +5,7 @@ module.exports = {
   async getUserDetail(pool, params, req, res) {
     let { userName, password } = params;
     let users = await pool.query(`select * from user where userName = '${userName}'`);
+    console.log('users', users[0])
     if (!users.length) {
       return {
         code: 400,
@@ -24,6 +25,7 @@ module.exports = {
     }
   },
   generageToken: async function (pool, login_id, res) {
+    console.log("generageToken")
     let token = await pool.query(`select * from trip_user_token where login_id = '${login_id}' and token_is_active = 1`);
     if (!token.length) {
       // 第一次登陆 生成token
@@ -46,6 +48,7 @@ module.exports = {
     }
   },
   async createToken(pool, login_id, res) {
+    console.log('createToken')
     let tokenText = generateRandomString(12);
     let obj = {
       token_text: tokenText,
@@ -54,6 +57,7 @@ module.exports = {
       token_is_active: 1
     };
     await saveInDB(pool, obj, 'trip_user_token');
+    console.log(obj.token_exp_dt.toString())
     res.setHeader('Set-Cookie', `sessionId=${tokenText};Expires=${obj.token_exp_dt.toString()};HttpOnly;Path=/`)
   },
   generateKey() {
