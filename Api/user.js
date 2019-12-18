@@ -38,7 +38,7 @@ module.exports = {
         let tempTime = moment().add(1, "days")
         let result = await pool.query(`update trip_user_token set token_exp_dt = '${moment(tempTime).format('YYYY-MM-DD HH:mm:ss')}' where token_id = ${token[0].token_id}`);
         // 注意 path
-        if (result.serverStatus === 2) res.setHeader('Set-Cookie', `sessionId=${token[0].token_text};Expires=${moment(tempTime).toString()};HttpOnly;Path=/`)
+        if (result.serverStatus === 2) res.setHeader('Set-Cookie', `sessionId=${token[0].token_text};Expires=${moment(tempTime).toString()};HttpOnly;Path=/;SameSite=None`)
 
       } else {
         // 过期了  //先注销再新建
@@ -58,7 +58,7 @@ module.exports = {
     };
     await saveInDB(pool, obj, 'trip_user_token');
     console.log(obj.token_exp_dt.toString())
-    res.setHeader('Set-Cookie', `sessionId=${tokenText};Expires=${obj.token_exp_dt.toString()};HttpOnly;Path=/`)
+    res.setHeader('Set-Cookie', `sessionId=${tokenText};Expires=${obj.token_exp_dt.toString()};HttpOnly;Path=/;SameSite=None`)
   },
   generateKey() {
     let applicationKey = webPush.generateVAPIDKeys();
