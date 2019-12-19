@@ -38,7 +38,10 @@ module.exports = {
         let tempTime = moment().add(1, "days")
         let result = await pool.query(`update trip_user_token set token_exp_dt = '${moment(tempTime).format('YYYY-MM-DD HH:mm:ss')}' where token_id = ${token[0].token_id}`);
         // 注意 path
-        if (result.serverStatus === 2) res.setHeader('Set-Cookie', `sessionId=${token[0].token_text};Expires=${moment(tempTime).toString()};HttpOnly;Path=/;SameSite=None;Secure`)
+        if (result.serverStatus === 2) {
+          res.cookie('sessionId', token[0].token_text, { path: '/', expires: token[0].token_exp_dt, httpOnly: true, secure: true, sameSite: 'None' })
+          res.cookie('login_id', login_id, { path: '/', expires: token[0].token_exp_dt, httpOnly: true, sameSite: 'None' secure: true,})
+        }
 
       } else {
         // 过期了  //先注销再新建
@@ -58,7 +61,9 @@ module.exports = {
     };
     await saveInDB(pool, obj, 'trip_user_token');
     console.log(obj.token_exp_dt.toString())
-    res.setHeader('Set-Cookie', `sessionId=${tokenText};Expires=${obj.token_exp_dt.toString()};HttpOnly;Path=/;SameSite=None;Secure`)
+    // res.setHeader('Set-Cookie', `sessionId=${tokenText};login_id=${login_id};Expires=${obj.token_exp_dt.toString()};HttpOnly;Path=/`);
+    res.cookie('sessionId', tokenText, { path: '/', expires: obj.token_exp_dt, httpOnly: true, secure: true, sameSite: 'None' })
+    res.cookie('login_id', login_id, { path: '/', expires: obj.token_exp_dt, httpOnly: true, secure: true, sameSite: 'None' })
   },
   generateKey() {
     let applicationKey = webPush.generateVAPIDKeys();
@@ -90,7 +95,8 @@ module.exports = {
   async logout(pool, params, req, res) {
     // 登出  删除cookie
     let result = await pool.query(`update trip_user_token set token_is_active = 0 where login_id='${req.headers['login_id']}' and token_text = '${req.cookies.sessionId}'`);
-    res.setHeader('Set-Cookie', `sessionId=${req.cookies.sessionId};Expires=${moment(new Date(-1)).toString()};HttpOnly;Path=/`);
+    res.clearCookie('sessionId', { path: '/' });
+    res.clearCookie('login_id', { path: '/' });
     return result
   }
 }

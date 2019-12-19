@@ -122,23 +122,24 @@ app.use("*", async function (req, res) {
   if (!service) res.status(500).end();
   try {
     let sessionId = req.cookies.sessionId
-    let login_id = decodeURI(req.headers['login_id'])
+    let login_id = req.cookies.login_id
     // 请求前 验证sessionId
-    if(req.baseUrl === '/user/getUserDetail'){
+    if(req.baseUrl === '/user/getUserDetail' || req.baseUrl === '/user/logout'){
       // if(sessionId){
       //   // 已经登陆过 
       //   res.status(204).end()
       // }
       console.log("getUserDetail")
       let resData = await service(global.pool, param, req, res);
-      res.status(200).json(resData).end()
+      res.status(200).json(resData).end();
+      return
     }
     
     if(!sessionId){
       res.status(401).end()
     } else {
       let token = await pool.query(`select * from trip_user_token where login_id = '${login_id}' and token_text='${sessionId}' and token_is_active = 1 and token_exp_dt >= ${Date.now()}`);
-      if(!token.length) res.status(401).json(e).end();
+      if(!token.length) res.status(401).json('token expires').end();
       let resData = await service(global.pool, param, req, res);
       res.status(200).json(resData).end()
     }
