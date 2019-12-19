@@ -40,7 +40,7 @@ module.exports = {
         // 注意 path
         if (result.serverStatus === 2) {
           res.cookie('sessionId', token[0].token_text, { path: '/', expires: token[0].token_exp_dt, httpOnly: true, secure: true, sameSite: 'None' })
-          res.cookie('login_id', login_id, { path: '/', expires: token[0].token_exp_dt, httpOnly: true, sameSite: 'None' secure: true,})
+          res.cookie('login_id', login_id, { path: '/', expires: token[0].token_exp_dt, httpOnly: true, sameSite: 'None', secure: true,})
         }
 
       } else {
